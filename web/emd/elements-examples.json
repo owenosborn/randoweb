@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "name": "Default Eurorack Element Library",
+  "notes": "All measurements in mm. Coordinates are relative to the element origin (pivot point). 'panel' shapes describe the visible front-panel cutout/profile; 'keepout' shapes describe the PCB area the part needs.",
+  "elements": [
+    {
+      "id": "knob-rogan-small",
+      "name": "Rogan PT (small, ~14mm)",
+      "category": "Knobs",
+      "panel": [ { "type": "circle", "cx": 0, "cy": 0, "r": 7.0 } ],
+      "keepout": [ { "type": "rect", "x": -5.0, "y": -5.0, "w": 10.0, "h": 10.0 } ]
+    },
+    {
+      "id": "knob-alpha-9mm",
+      "name": "Alpha 9mm pot",
+      "category": "Knobs",
+      "panel": [ { "type": "circle", "cx": 0, "cy": 0, "r": 4.0 } ],
+      "keepout": [ { "type": "rect", "x": -5.0, "y": -5.0, "w": 10.0, "h": 10.0 } ]
+    },
+    {
+      "id": "knob-songhuei-9mm",
+      "name": "Song Huei 9mm pot",
+      "category": "Knobs",
+      "panel": [ { "type": "circle", "cx": 0, "cy": 0, "r": 4.0 } ],
+      "keepout": [ { "type": "rect", "x": -5.5, "y": -5.5, "w": 11.0, "h": 11.0 } ]
+    },
+    {
+      "id": "jack-thonkiconn",
+      "name": "Thonkiconn 3.5mm mono jack",
+      "category": "Jacks",
+      "panel": [ { "type": "circle", "cx": 0, "cy": 0, "r": 3.0 } ],
+      "keepout": [ { "type": "rect", "x": -4.0, "y": -4.0, "w": 8.0, "h": 10.0 } ]
+    },
+    {
+      "id": "jack-pj366",
+      "name": "PJ366ST stereo jack",
+      "category": "Jacks",
+      "panel": [ { "type": "circle", "cx": 0, "cy": 0, "r": 3.0 } ],
+      "keepout": [ { "type": "rect", "x": -4.5, "y": -4.5, "w": 9.0, "h": 12.0 } ]
+    },
+    {
+      "id": "led-3mm",
+      "name": "3mm LED",
+      "category": "LEDs",
+      "panel": [ { "type": "circle", "cx": 0, "cy": 0, "r": 1.6 } ],
+      "keepout": [ { "type": "rect", "x": -2.0, "y": -2.0, "w": 4.0, "h": 4.0 } ]
+    },
+    {
+      "id": "led-5mm",
+      "name": "5mm LED",
+      "category": "LEDs",
+      "panel": [ { "type": "circle", "cx": 0, "cy": 0, "r": 2.6 } ],
+      "keepout": [ { "type": "rect", "x": -3.0, "y": -3.0, "w": 6.0, "h": 6.0 } ]
+    },
+    {
+      "id": "switch-spdt-mini",
+      "name": "Mini SPDT toggle",
+      "category": "Switches",
+      "panel": [ { "type": "circle", "cx": 0, "cy": 0, "r": 3.0 } ],
+      "keepout": [ { "type": "rect", "x": -4.0, "y": -6.0, "w": 8.0, "h": 12.0 } ]
+    },
+    {
+      "id": "button-tactile-6mm",
+      "name": "Tactile button (6mm)",
+      "category": "Switches",
+      "panel": [ { "type": "rect", "x": -3.0, "y": -3.0, "w": 6.0, "h": 6.0 } ],
+      "keepout": [ { "type": "rect", "x": -4.0, "y": -4.0, "w": 8.0, "h": 8.0 } ]
+    },
+    {
+      "id": "header-2x5-power",
+      "name": "2x5 Eurorack power header (PCB only)",
+      "category": "PCB only",
+      "panel": [],
+      "keepout": [ { "type": "rect", "x": -8.0, "y": -3.0, "w": 16.0, "h": 6.0 } ]
+    },
+    {
+      "id": "display-oled-128x32",
+      "name": "OLED 128x32 (0.91\")",
+      "category": "Displays",
+      "panel": [ { "type": "rect", "x": -12.0, "y": -3.5, "w": 24.0, "h": 7.0 } ],
+      "keepout": [ { "type": "rect", "x": -14.0, "y": -6.0, "w": 28.0, "h": 12.0 } ]
+    }
+  ]
+}

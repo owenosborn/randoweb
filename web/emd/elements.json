@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "name": "Project Library",
+  "notes": "Active component library for the current modules. All measurements in mm. Coordinates relative to element origin (pivot). See elements-examples.json for reference shapes.",
+  "elements": [
+    {
+      "id": "pot-small",
+      "name": "Small Pot",
+      "category": "Pots",
+      "panel":       [ { "type": "circle", "cx": 0, "cy": 0, "r": 3.0 } ],
+      "decorations": [ { "type": "rect",   "x": -0.3, "y": -2.7, "w": 0.6, "h": 2.4, "rotation": 223 } ],
+      "keepout":     [ { "type": "rect",   "x": -6.5, "y": -5.4, "w": 13, "h": 14 } ]
+    },
+    {
+      "id": "pot-cg-selco",
+      "name": "CG Selco Pot (0.6\")",
+      "category": "Pots",
+      "panel":       [ { "type": "circle", "cx": 0, "cy": 0, "r": 7.62 } ],
+      "decorations": [ { "type": "rect",   "x": -0.3, "y": -7.0, "w": 0.6, "h": 6.4, "rotation": 223 } ],
+      "keepout":     [ { "type": "rect",   "x": -6.5, "y": -5.4, "w": 13, "h": 14 } ]
+    },
+    {
+      "id": "pot-big",
+      "name": "Big Pot (0.75\")",
+      "category": "Pots",
+      "panel":       [ { "type": "circle", "cx": 0, "cy": 0, "r": 9.525 } ],
+      "decorations": [ { "type": "rect",   "x": -0.3, "y": -9.0, "w": 0.6, "h": 8.2, "rotation": 223 } ],
+      "keepout":     [ { "type": "rect",   "x": -6.5, "y": -5.4, "w": 13, "h": 14 } ]
+    },
+    {
+      "id": "slider-30mm",
+      "name": "30mm Slider",
+      "category": "Sliders",
+      "panel":       [ { "type": "rect", "x": -0.889, "y": -15, "w": 1.778, "h": 30 } ],
+      "keepout":     [ { "type": "rect", "x": -5.7, "y": -22.9, "w": 11.4, "h": 45.8 } ]
+    },
+    {
+      "id": "button-cg-wood",
+      "name": "CG Wood Button (0.45\")",
+      "category": "Buttons",
+      "panel":       [ { "type": "circle", "cx": 0, "cy": 0, "r": 5.715 } ],
+      "keepout":     [ { "type": "rect",   "x": -3, "y": -4, "w": 6, "h": 8 } ]
+    },
+    {
+      "id": "button-small",
+      "name": "Small Button",
+      "category": "Buttons",
+      "panel":       [ { "type": "circle", "cx": 0, "cy": 0, "r": 2.5 } ],
+      "keepout":     [ { "type": "rect",   "x": -5.8, "y": -3.1, "w": 11.6, "h": 6.2 } ]
+    },
+    {
+      "id": "led-rgb-4mm",
+      "name": "RGB LED (4mm)",
+      "category": "LEDs",
+      "panel":       [ { "type": "circle", "cx": 0, "cy": 0, "r": 2.0 } ],
+      "decorations": [ { "type": "circle", "cx": 0, "cy": 0, "r": 1.3, "fill": "url(#led-rgb)" } ],
+      "keepout":     [ { "type": "rect",   "x": -3.4, "y": -2.45, "w": 6.8, "h": 4.9 } ]
+    },
+    {
+      "id": "jack-thonkiconn",
+      "name": "Thonkiconn 3.5mm Jack",
+      "category": "Jacks",
+      "panel":       [ { "type": "circle", "cx": 0, "cy": 0, "r": 2.5 } ],
+      "decorations": [
+        { "type": "circle", "cx": 0, "cy": 0, "r": 1.6, "fill": "#999" },
+        { "type": "circle", "cx": 0, "cy": 0, "r": 0.75, "fill": "#000" }
+      ],
+      "keepout":     [ { "type": "rect",   "x": -4.6, "y": -6, "w": 9.2, "h": 12.7 } ]
+    }
+  ]
+}
