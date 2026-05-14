@@ -59,7 +59,7 @@ const state = {
   library: DEFAULT_LIBRARY,
   panel: { hp: 12 },
   instances: [],                // { id, libraryId, x, y, rot }
-  selectedId: null,
+  selectedIds: new Set(),
   nextId: 1,
   showKeepouts: true,
   showGrid: true,
@@ -175,7 +175,7 @@ function renderInstance(inst) {
   const lib = findLibElement(inst.libraryId);
   if (!lib) return el('g');
   const g = el('g', {
-    class: 'elem-group' + (state.selectedId === inst.id ? ' selected' : ''),
+    class: 'elem-group' + (state.selectedIds.has(inst.id) ? ' selected' : ''),
     transform: `translate(${inst.x.toFixed(3)} ${inst.y.toFixed(3)}) rotate(${inst.rot})`,
     'data-inst-id': inst.id
   });
@@ -293,14 +293,23 @@ function libBBox(lib) {
 }
 
 function renderInspector() {
-  const inst = state.instances.find(i => i.id === state.selectedId);
-  if (!inst) {
+  if (state.selectedIds.size === 0) {
     inspectorContent.innerHTML = `
       <p class="muted">No element selected.</p>
-      <p class="muted small">Click an element to edit.<br>R to rotate · Del to remove · Arrows to nudge.</p>
+      <p class="muted small">Click an element to edit. Drag in empty space to box-select.<br>R to rotate · Del to remove · Arrows to nudge.</p>
     `;
     return;
   }
+  if (state.selectedIds.size > 1) {
+    inspectorContent.innerHTML = `
+      <p class="muted">${state.selectedIds.size} elements selected.</p>
+      <p class="muted small">Drag to move all. Del to remove. Shift+click to toggle.<br>Click empty area to deselect.</p>
+    `;
+    return;
+  }
+  const onlyId = [...state.selectedIds][0];
+  const inst = state.instances.find(i => i.id === onlyId);
+  if (!inst) { inspectorContent.innerHTML = '<p class="muted">No element selected.</p>'; return; }
   const lib = findLibElement(inst.libraryId);
   inspectorContent.innerHTML = '';
   const name = document.createElement('div');
@@ -345,14 +354,57 @@ function afterChange() {
 
 // ---------- Selection / deletion / nudging ----------
 function selectInstance(id) {
-  state.selectedId = id;
+  state.selectedIds = new Set([id]);
   render();
   renderInspector();
 }
 function deleteInstance(id) {
   state.instances = state.instances.filter(i => i.id !== id);
-  if (state.selectedId === id) state.selectedId = null;
+  state.selectedIds.delete(id);
   afterChange();
+}
+
+// World-space AABB of an instance's panel shapes (falls back to keepout for PCB-only parts).
+function instanceBBox(inst) {
+  const lib = findLibElement(inst.libraryId);
+  if (!lib) return null;
+  const shapes = (lib.panel && lib.panel.length) ? lib.panel : lib.keepout;
+  if (!shapes || !shapes.length) return null;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const s of shapes) {
+    let pts;
+    if (s.type === 'circle') {
+      const c = xform(inst, s.cx, s.cy);
+      pts = [{x: c.x - s.r, y: c.y - s.r}, {x: c.x + s.r, y: c.y + s.r}];
+    } else if (s.type === 'rect') {
+      pts = [
+        xform(inst, s.x, s.y),
+        xform(inst, s.x + s.w, s.y),
+        xform(inst, s.x + s.w, s.y + s.h),
+        xform(inst, s.x, s.y + s.h),
+      ];
+    } else continue;
+    for (const p of pts) {
+      if (p.x < minX) minX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y > maxY) maxY = p.y;
+    }
+  }
+  if (!isFinite(minX)) return null;
+  return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+}
+function rectsOverlap(a, b) {
+  return !(a.x + a.w < b.x || b.x + b.w < a.x || a.y + a.h < b.y || b.y + b.h < a.y);
+}
+function instancesInRect(x, y, w, h) {
+  const rect = { x, y, w, h };
+  const out = [];
+  for (const inst of state.instances) {
+    const b = instanceBBox(inst);
+    if (b && rectsOverlap(rect, b)) out.push(inst.id);
+  }
+  return out;
 }
 
 // ---------- Drag from palette ----------
@@ -387,13 +439,30 @@ function onInstancePointerDown(evt) {
   const inst = state.instances.find(i => i.id === id);
   if (!inst) return;
 
-  selectInstance(id);
+  if (evt.shiftKey) {
+    // Toggle membership; no drag
+    if (state.selectedIds.has(id)) state.selectedIds.delete(id);
+    else state.selectedIds.add(id);
+    render();
+    renderInspector();
+    return;
+  }
+
+  // If not already in selection, replace selection with just this one
+  if (!state.selectedIds.has(id)) state.selectedIds = new Set([id]);
 
   const m = mouseToSvg(evt);
-  state.drag = { kind: 'instance', instId: id, dx: m.x - inst.x, dy: m.y - inst.y };
+  const origs = [];
+  for (const sid of state.selectedIds) {
+    const si = state.instances.find(i => i.id === sid);
+    if (si) origs.push({ id: sid, ox: si.x, oy: si.y });
+  }
+  state.drag = { kind: 'instance', start: m, origs };
   svg.setPointerCapture?.(evt.pointerId);
   window.addEventListener('pointermove', onWindowPointerMove);
   window.addEventListener('pointerup', onWindowPointerUp, { once: true });
+  render();
+  renderInspector();
 }
 
 function onWindowPointerMove(evt) {
@@ -402,14 +471,34 @@ function onWindowPointerMove(evt) {
   if (!state.drag) return;
 
   if (state.drag.kind === 'palette') {
-    state.drag.ghost.setAttribute('transform', `translate(${m.x.toFixed(3)} ${m.y.toFixed(3)})`);
+    const gx = maybeSnap(m.x), gy = maybeSnap(m.y);
+    state.drag.ghost.setAttribute('transform', `translate(${gx.toFixed(3)} ${gy.toFixed(3)})`);
   } else if (state.drag.kind === 'instance') {
-    const inst = state.instances.find(i => i.id === state.drag.instId);
-    if (!inst) return;
-    inst.x = maybeSnap(m.x - state.drag.dx);
-    inst.y = maybeSnap(m.y - state.drag.dy);
+    const dx = m.x - state.drag.start.x;
+    const dy = m.y - state.drag.start.y;
+    for (const o of state.drag.origs) {
+      const inst = state.instances.find(i => i.id === o.id);
+      if (!inst) continue;
+      inst.x = maybeSnap(o.ox + dx);
+      inst.y = maybeSnap(o.oy + dy);
+    }
     recomputeCollisions();
     render();
+    renderInspector();
+  } else if (state.drag.kind === 'marquee') {
+    const s = state.drag.start;
+    const x = Math.min(s.x, m.x), y = Math.min(s.y, m.y);
+    const w = Math.abs(m.x - s.x), h = Math.abs(m.y - s.y);
+    if (w > 0.5 || h > 0.5) state.drag.moved = true;
+    const inRect = instancesInRect(x, y, w, h);
+    state.selectedIds = new Set([...state.drag.prevSelected, ...inRect]);
+    render();
+    // Re-append marquee rect because render() wipes the SVG.
+    state.drag.rect.setAttribute('x', x);
+    state.drag.rect.setAttribute('y', y);
+    state.drag.rect.setAttribute('width', w);
+    state.drag.rect.setAttribute('height', h);
+    svg.appendChild(state.drag.rect);
     renderInspector();
   }
 }
@@ -431,23 +520,44 @@ function onWindowPointerUp(evt) {
         rot: 0
       };
       state.instances.push(inst);
-      state.selectedId = inst.id;
+      state.selectedIds = new Set([inst.id]);
       state.drag = null;
       afterChange();
       return;
     }
+  } else if (state.drag.kind === 'marquee') {
+    state.drag.rect.remove();
+    if (!state.drag.moved) {
+      // No drag — treat as click. Without shift, clear selection.
+      state.selectedIds = new Set(state.drag.prevSelected);
+    }
+    // else: selection was already updated live during pointermove.
   }
   state.drag = null;
   recomputeCollisions();
   render();
+  renderInspector();
 }
 
-// ---------- Canvas background clicks (deselect) ----------
+// ---------- Canvas background (marquee select / deselect) ----------
 // Instance handler calls stopPropagation, so anything reaching here is background.
 function onCanvasPointerDown(evt) {
-  state.selectedId = null;
-  render();
-  renderInspector();
+  evt.preventDefault();
+  const m = mouseToSvg(evt);
+  const prevSelected = evt.shiftKey ? new Set(state.selectedIds) : new Set();
+  const rect = el('rect', {
+    class: 'marquee',
+    x: m.x, y: m.y, width: 0, height: 0,
+    fill: 'rgba(120,170,255,0.15)',
+    stroke: '#6aa8ff',
+    'stroke-width': 0.15,
+    'stroke-dasharray': '0.6 0.4',
+    'pointer-events': 'none'
+  });
+  svg.appendChild(rect);
+  state.drag = { kind: 'marquee', start: m, rect, prevSelected, moved: false };
+  window.addEventListener('pointermove', onWindowPointerMove);
+  window.addEventListener('pointerup', onWindowPointerUp, { once: true });
 }
 
 // ---------- Mouse status display ----------
@@ -618,7 +728,7 @@ function loadLayoutData(data) {
     libraryId: d.libraryId,
     x: d.x, y: d.y, rot: d.rot || 0
   }));
-  state.selectedId = null;
+  state.selectedIds = new Set();
   afterChange();
 }
 function loadLibraryData(data) {
@@ -678,19 +788,28 @@ function exportSVG() {
 function onKey(evt) {
   // Ignore when typing in an input
   if (evt.target.tagName === 'INPUT' || evt.target.tagName === 'TEXTAREA') return;
+  if (state.selectedIds.size === 0) return;
 
-  const inst = state.instances.find(i => i.id === state.selectedId);
-  if (!inst) return;
-  let handled = true;
+  const selected = [...state.selectedIds]
+    .map(id => state.instances.find(i => i.id === id))
+    .filter(Boolean);
+  const single = selected.length === 1 ? selected[0] : null;
   const nudge = evt.shiftKey ? inToMm(0.25) : inToMm(0.05);
+  let handled = true;
   switch (evt.key) {
-    case 'Delete': case 'Backspace': deleteInstance(inst.id); break;
-    case 'r': inst.rot = (inst.rot + 90) % 360; afterChange(); break;
-    case 'R': inst.rot = (inst.rot + 270) % 360; afterChange(); break;
-    case 'ArrowLeft':  inst.x = maybeSnap(inst.x - nudge); afterChange(); break;
-    case 'ArrowRight': inst.x = maybeSnap(inst.x + nudge); afterChange(); break;
-    case 'ArrowUp':    inst.y = maybeSnap(inst.y - nudge); afterChange(); break;
-    case 'ArrowDown':  inst.y = maybeSnap(inst.y + nudge); afterChange(); break;
+    case 'Delete': case 'Backspace': {
+      const ids = new Set(state.selectedIds);
+      state.instances = state.instances.filter(i => !ids.has(i.id));
+      state.selectedIds = new Set();
+      afterChange();
+      break;
+    }
+    case 'r': if (single) { single.rot = (single.rot + 90) % 360; afterChange(); } break;
+    case 'R': if (single) { single.rot = (single.rot + 270) % 360; afterChange(); } break;
+    case 'ArrowLeft':  for (const i of selected) i.x = maybeSnap(i.x - nudge); afterChange(); break;
+    case 'ArrowRight': for (const i of selected) i.x = maybeSnap(i.x + nudge); afterChange(); break;
+    case 'ArrowUp':    for (const i of selected) i.y = maybeSnap(i.y - nudge); afterChange(); break;
+    case 'ArrowDown':  for (const i of selected) i.y = maybeSnap(i.y + nudge); afterChange(); break;
     default: handled = false;
   }
   if (handled) evt.preventDefault();
