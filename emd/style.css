@@ -164,12 +164,21 @@ aside h2 {
 .elem-group.dragging { cursor: grabbing; }
 .elem-group.selected .elem-panel { stroke: var(--accent); stroke-width: 0.4; }
 
+.elem-label {
+  font-size: 2.6px;
+  font-family: sans-serif;
+  fill: #222;
+  pointer-events: none;
+  user-select: none;
+}
+
 .ghost { opacity: 0.6; pointer-events: none; }
 
 /* Inspector */
 .field { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .field label { width: 64px; color: var(--muted); font-size: 11px; }
-.field input {
+.field input,
+.field textarea {
   flex: 1;
   background: var(--bg);
   border: 1px solid var(--panel-border);
@@ -177,6 +186,14 @@ aside h2 {
   padding: 3px 6px;
   border-radius: 4px;
 }
+.field textarea {
+  font-family: inherit;
+  font-size: 12px;
+  resize: vertical;
+  min-height: 44px;
+}
+.field.col { flex-direction: column; align-items: stretch; gap: 4px; }
+.field.col label { width: auto; }
 .inspector-name { font-weight: 600; margin-bottom: 8px; }
 .inspector-actions { display: flex; gap: 6px; margin-top: 10px; }
 .inspector-actions button {

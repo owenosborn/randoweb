@@ -9,6 +9,7 @@ const HOLE_X_INSET = 7.5;    // mounting hole offset from left/right edges (mm)
 const RAIL_KEEPOUT_H = 9.25; // depth of rail no-PCB zone at top and bottom (mm); leaves 110mm usable between rails
 const MM_PER_IN = 25.4;
 const SNAP_IN = 0.05;        // snap step in inches
+const LABEL_GAP = 1.6;       // gap (mm) between a control's bbox and its name label
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 const mmToIn = (mm) => mm / MM_PER_IN;
@@ -167,6 +168,11 @@ function render() {
   for (const inst of state.instances) {
     svg.appendChild(renderInstance(inst));
   }
+  // Name labels — separate pass so they sit above all elements
+  for (const inst of state.instances) {
+    const label = renderLabel(inst);
+    if (label) svg.appendChild(label);
+  }
 
   updateMouseStatus();
 }
@@ -192,6 +198,22 @@ function renderInstance(inst) {
 
   g.addEventListener('pointerdown', onInstancePointerDown);
   return g;
+}
+
+// The instance's name, drawn horizontally just below its (rotation-aware) bounding box.
+function renderLabel(inst) {
+  if (!inst.name) return null;
+  const bbox = instanceBBox(inst);
+  if (!bbox) return null;
+  const t = el('text', {
+    class: 'elem-label',
+    x: bbox.x + bbox.w / 2,
+    y: bbox.y + bbox.h + LABEL_GAP,
+    'text-anchor': 'middle',
+    'dominant-baseline': 'hanging'
+  });
+  t.textContent = inst.name;
+  return t;
 }
 
 function shapeNode(s, cls) {
@@ -317,6 +339,11 @@ function renderInspector() {
   name.textContent = lib ? lib.name : inst.libraryId;
   inspectorContent.appendChild(name);
 
+  // Name/Description handlers deliberately avoid afterChange() — it rebuilds the
+  // inspector DOM, which would destroy the field the user is tabbing into mid-edit.
+  inspectorContent.appendChild(makeField('Label', inst.name || '', v => { inst.name = v.trim(); render(); }));
+  inspectorContent.appendChild(makeAreaField('Description', inst.desc || '', v => { inst.desc = v; }));
+
   inspectorContent.appendChild(makeField('X (in)', mmToIn(inst.x).toFixed(3), v => { inst.x = inToMm(parseFloat(v) || 0); afterChange(); }));
   inspectorContent.appendChild(makeField('Y (in)', mmToIn(inst.y).toFixed(3), v => { inst.y = inToMm(parseFloat(v) || 0); afterChange(); }));
   inspectorContent.appendChild(makeField('Rotation', inst.rot, v => { inst.rot = (parseFloat(v) || 0) % 360; afterChange(); }));
@@ -341,8 +368,29 @@ function makeField(label, value, onChange) {
   l.textContent = label;
   const inp = document.createElement('input');
   inp.value = value;
+  inp.autocomplete = 'off';
+  inp.setAttribute('autocapitalize', 'off');
+  inp.setAttribute('autocorrect', 'off');
+  inp.spellcheck = false;
   inp.addEventListener('change', () => onChange(inp.value));
   f.append(l, inp);
+  return f;
+}
+
+function makeAreaField(label, value, onChange) {
+  const f = document.createElement('div');
+  f.className = 'field col';
+  const l = document.createElement('label');
+  l.textContent = label;
+  const ta = document.createElement('textarea');
+  ta.value = value;
+  ta.rows = 3;
+  ta.autocomplete = 'off';
+  ta.setAttribute('autocapitalize', 'off');
+  ta.setAttribute('autocorrect', 'off');
+  ta.spellcheck = false;
+  ta.addEventListener('change', () => onChange(ta.value));
+  f.append(l, ta);
   return f;
 }
 
@@ -517,7 +565,9 @@ function onWindowPointerUp(evt) {
         libraryId: state.drag.libraryId,
         x: maybeSnap(m.x),
         y: maybeSnap(m.y),
-        rot: 0
+        rot: 0,
+        name: '',
+        desc: ''
       };
       state.instances.push(inst);
       state.selectedIds = new Set([inst.id]);
@@ -713,9 +763,12 @@ function saveLayout() {
   const data = {
     version: 1,
     panel: { hp: state.panel.hp },
-    instances: state.instances.map(i => ({
-      libraryId: i.libraryId, x: +i.x.toFixed(4), y: +i.y.toFixed(4), rot: i.rot
-    }))
+    instances: state.instances.map(i => {
+      const o = { libraryId: i.libraryId, x: +i.x.toFixed(4), y: +i.y.toFixed(4), rot: i.rot };
+      if (i.name) o.name = i.name;
+      if (i.desc) o.desc = i.desc;
+      return o;
+    })
   };
   downloadJSON(data, 'layout.json');
 }
@@ -726,7 +779,8 @@ function loadLayoutData(data) {
   state.instances = data.instances.map(d => ({
     id: state.nextId++,
     libraryId: d.libraryId,
-    x: d.x, y: d.y, rot: d.rot || 0
+    x: d.x, y: d.y, rot: d.rot || 0,
+    name: d.name || '', desc: d.desc || ''
   }));
   state.selectedIds = new Set();
   afterChange();
@@ -772,6 +826,7 @@ function exportSVG() {
     .elem-panel { fill: #1a1a1a; stroke: #000; stroke-width: 0.25; }
     .elem-deco  { fill: #fff; stroke: none; }
     .elem-keepout { fill: none; stroke: #111; stroke-width: 0.3; stroke-dasharray: 0.8 0.5; }
+    .elem-label { font-size: 2.6px; font-family: sans-serif; fill: #222; }
     .grid-line { stroke: rgba(0,0,0,0.08); stroke-width: 0.05; }
     .grid-line.major { stroke: rgba(0,0,0,0.15); stroke-width: 0.1; }
   `;
@@ -781,6 +836,100 @@ function exportSVG() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = 'panel.svg'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ---------- Export DXF (KiCad: File > Import > Graphics) ----------
+// Minimal R12 ASCII DXF — only LINE + CIRCLE, which every importer accepts.
+// Shapes are baked to world coords (rotation included); Y is flipped because
+// DXF is Y-up while this app is Y-down, so the panel imports right-side up.
+function exportDXF() {
+  const W = panelWidth();
+  const ents = [];
+  const fy = (y) => PANEL_H - y;
+  const num = (v) => (+v).toFixed(4);
+
+  function circle(layer, cx, cy, r) {
+    ents.push('0', 'CIRCLE', '8', layer,
+      '10', num(cx), '20', num(fy(cy)), '30', '0', '40', num(r));
+  }
+  function line(layer, x1, y1, x2, y2) {
+    ents.push('0', 'LINE', '8', layer,
+      '10', num(x1), '20', num(fy(y1)), '30', '0',
+      '11', num(x2), '21', num(fy(y2)), '31', '0');
+  }
+  function poly(layer, pts) {            // closed polygon as edge lines
+    for (let i = 0; i < pts.length; i++) {
+      const a = pts[i], b = pts[(i + 1) % pts.length];
+      line(layer, a.x, a.y, b.x, b.y);
+    }
+  }
+  function rectPts(x, y, w, h) {
+    return [{ x, y }, { x: x + w, y }, { x: x + w, y: y + h }, { x, y: y + h }];
+  }
+  function emitShape(layer, inst, s) {   // a library shape under an instance pose
+    if (s.type === 'circle') {
+      const c = xform(inst, s.cx, s.cy);
+      circle(layer, c.x, c.y, s.r);
+    } else if (s.type === 'rect') {
+      poly(layer, [
+        xform(inst, s.x, s.y),
+        xform(inst, s.x + s.w, s.y),
+        xform(inst, s.x + s.w, s.y + s.h),
+        xform(inst, s.x, s.y + s.h),
+      ]);
+    }
+  }
+
+  // Panel outline + mounting holes
+  poly('panel', rectPts(0, 0, W, PANEL_H));
+  if (W >= 2 * HOLE_X_INSET + 2) {
+    for (const [hx, hy] of [
+      [HOLE_X_INSET, RAIL_INSET_Y],
+      [W - HOLE_X_INSET, RAIL_INSET_Y],
+      [HOLE_X_INSET, PANEL_H - RAIL_INSET_Y],
+      [W - HOLE_X_INSET, PANEL_H - RAIL_INSET_Y],
+    ]) circle('panel', hx, hy, 1.6);
+  }
+
+  // Rail keepout bands (top + bottom)
+  poly('keepouts', rectPts(0, 0, W, RAIL_KEEPOUT_H));
+  poly('keepouts', rectPts(0, PANEL_H - RAIL_KEEPOUT_H, W, RAIL_KEEPOUT_H));
+
+  // Per-instance control cutouts + keepouts
+  for (const inst of state.instances) {
+    const lib = findLibElement(inst.libraryId);
+    if (!lib) continue;
+    for (const s of lib.panel) emitShape('cutouts', inst, s);
+    for (const s of lib.keepout) emitShape('keepouts', inst, s);
+  }
+
+  const layers = ['panel', 'cutouts', 'keepouts'];
+  const layerTable = [];
+  for (const name of layers) {
+    layerTable.push('0', 'LAYER', '2', name, '70', '0', '62', '7', '6', 'CONTINUOUS');
+  }
+
+  const dxf = [
+    '0', 'SECTION', '2', 'HEADER',
+    '9', '$ACADVER', '1', 'AC1009',
+    '9', '$INSUNITS', '70', '4',                 // 4 = millimeters
+    '0', 'ENDSEC',
+    '0', 'SECTION', '2', 'TABLES',
+    '0', 'TABLE', '2', 'LAYER', '70', String(layers.length),
+    ...layerTable,
+    '0', 'ENDTAB',
+    '0', 'ENDSEC',
+    '0', 'SECTION', '2', 'ENTITIES',
+    ...ents,
+    '0', 'ENDSEC',
+    '0', 'EOF',
+  ].join('\n') + '\n';
+
+  const blob = new Blob([dxf], { type: 'application/dxf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'panel.dxf'; a.click();
   URL.revokeObjectURL(url);
 }
 
@@ -837,6 +986,7 @@ function init() {
   document.getElementById('btn-load').onclick = () => pickJSON(loadLayoutData);
   document.getElementById('btn-library').onclick = () => pickJSON(loadLibraryData);
   document.getElementById('btn-export').onclick = exportSVG;
+  document.getElementById('btn-export-dxf').onclick = exportDXF;
 
   svg.addEventListener('pointerdown', onCanvasPointerDown);
   svg.addEventListener('pointermove', (e) => updateMouseStatus(mouseToSvg(e)));
