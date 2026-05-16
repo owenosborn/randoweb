@@ -1,0 +1,374 @@
+{
+  "version": 1,
+  "panel": {
+    "hp": 4
+  },
+  "instances": [
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 12.7,
+      "y": 13.25,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 17.6,
+      "y": 13.25,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 12.7,
+      "y": 20.05,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 17.6,
+      "y": 20.05,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 2.9,
+      "y": 26.85,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 7.8,
+      "y": 26.85,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 12.7,
+      "y": 26.85,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 17.6,
+      "y": 26.85,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 2.9,
+      "y": 33.65,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 7.8,
+      "y": 33.65,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 12.7,
+      "y": 33.65,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 17.6,
+      "y": 33.65,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 2.9,
+      "y": 40.45,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 7.8,
+      "y": 40.45,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 12.7,
+      "y": 40.45,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 17.6,
+      "y": 40.45,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 2.9,
+      "y": 47.25,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 7.8,
+      "y": 47.25,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 12.7,
+      "y": 47.25,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 17.6,
+      "y": 47.25,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 2.9,
+      "y": 54.05,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 7.8,
+      "y": 54.05,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 12.7,
+      "y": 54.05,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 17.6,
+      "y": 54.05,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 2.9,
+      "y": 60.85,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 7.8,
+      "y": 60.85,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 12.7,
+      "y": 60.85,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 17.6,
+      "y": 60.85,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 2.9,
+      "y": 67.65,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 7.8,
+      "y": 67.65,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 12.7,
+      "y": 67.65,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 17.6,
+      "y": 67.65,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 2.9,
+      "y": 74.45,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 7.8,
+      "y": 74.45,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 12.7,
+      "y": 74.45,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 17.6,
+      "y": 74.45,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 2.9,
+      "y": 81.25,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 7.8,
+      "y": 81.25,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 12.7,
+      "y": 81.25,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 17.6,
+      "y": 81.25,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 2.9,
+      "y": 88.05,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 7.8,
+      "y": 88.05,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 12.7,
+      "y": 88.05,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 17.6,
+      "y": 88.05,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 2.9,
+      "y": 94.85,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 7.8,
+      "y": 94.85,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 12.7,
+      "y": 94.85,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 17.6,
+      "y": 94.85,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 2.9,
+      "y": 101.65,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 7.8,
+      "y": 101.65,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 12.7,
+      "y": 101.65,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 17.6,
+      "y": 101.65,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 2.9,
+      "y": 108.45,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 7.8,
+      "y": 108.45,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 12.7,
+      "y": 108.45,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 17.6,
+      "y": 108.45,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 2.9,
+      "y": 115.25,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 7.8,
+      "y": 115.25,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 12.7,
+      "y": 115.25,
+      "rot": 90
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 17.6,
+      "y": 115.25,
+      "rot": 90
+    },
+    {
+      "libraryId": "jack-thonkiconn",
+      "x": 5.08,
+      "y": 16.51,
+      "rot": 0
+    }
+  ]
+}

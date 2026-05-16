@@ -46,6 +46,26 @@
   </main>
 
   <input type="file" id="file-input" accept=".json" hidden>
+
+  <div id="label-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="label-modal-title">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <h3 id="label-modal-title">Edit Label</h3>
+      <div class="field col">
+        <label for="label-modal-name">Label</label>
+        <input id="label-modal-name" type="text" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field col">
+        <label for="label-modal-desc">Description</label>
+        <textarea id="label-modal-desc" rows="4" spellcheck="false"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button id="label-modal-cancel">Cancel</button>
+        <button id="label-modal-save" class="primary">Save</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>

@@ -51,7 +51,10 @@ const DEFAULT_LIBRARY = {
         { type: "circle", cx: 0, cy: 0, r: 1.6, fill: "#999" },
         { type: "circle", cx: 0, cy: 0, r: 0.75, fill: "#000" }
       ],
-      keepout:     [{ type: "rect", x: -4.6, y: -6, w: 9.2, h: 12.7 }] }
+      keepout:     [{ type: "rect", x: -4.6, y: -6, w: 9.2, h: 12.7 }] },
+    { id: "oled-1p3", name: "OLED 1.3\"", category: "Displays",
+      panel:       [{ type: "rect", x: -15.875, y: -8.128, w: 31.75, h: 16.256 }],
+      keepout:     [{ type: "rect", x: -18.542, y: -11.303, w: 37.084, h: 26.162 }] }
   ]
 };
 
@@ -68,6 +71,7 @@ const state = {
   badInstances: new Set(),
   drag: null,                   // { kind:'palette'|'instance', libraryId?, instId?, dx?, dy?, ghost? }
 };
+let lastClick = { id: null, t: 0 };  // for manual dblclick detection on instances
 
 // ---------- DOM refs ----------
 const svg = document.getElementById('canvas');
@@ -339,10 +343,32 @@ function renderInspector() {
   name.textContent = lib ? lib.name : inst.libraryId;
   inspectorContent.appendChild(name);
 
-  // Name/Description handlers deliberately avoid afterChange() — it rebuilds the
-  // inspector DOM, which would destroy the field the user is tabbing into mid-edit.
-  inspectorContent.appendChild(makeField('Label', inst.name || '', v => { inst.name = v.trim(); render(); }));
-  inspectorContent.appendChild(makeAreaField('Description', inst.desc || '', v => { inst.desc = v; }));
+  if (inst.name || inst.desc) {
+    const meta = document.createElement('div');
+    meta.className = 'inspector-meta';
+    if (inst.name) {
+      const n = document.createElement('div');
+      n.className = 'inspector-meta-label';
+      n.textContent = inst.name;
+      meta.appendChild(n);
+    }
+    if (inst.desc) {
+      const d = document.createElement('div');
+      d.className = 'inspector-meta-desc';
+      d.textContent = inst.desc;
+      meta.appendChild(d);
+    }
+    inspectorContent.appendChild(meta);
+  }
+  const editBtn = document.createElement('button');
+  editBtn.className = 'inspector-edit-btn';
+  editBtn.textContent = inst.name || inst.desc ? 'Edit Label / Description' : 'Add Label / Description';
+  editBtn.onclick = () => openLabelModal(inst);
+  inspectorContent.appendChild(editBtn);
+  const hint = document.createElement('p');
+  hint.className = 'muted small';
+  hint.textContent = 'Or double-click the element on the canvas.';
+  inspectorContent.appendChild(hint);
 
   inspectorContent.appendChild(makeField('X (in)', mmToIn(inst.x).toFixed(3), v => { inst.x = inToMm(parseFloat(v) || 0); afterChange(); }));
   inspectorContent.appendChild(makeField('Y (in)', mmToIn(inst.y).toFixed(3), v => { inst.y = inToMm(parseFloat(v) || 0); afterChange(); }));
@@ -377,28 +403,57 @@ function makeField(label, value, onChange) {
   return f;
 }
 
-function makeAreaField(label, value, onChange) {
-  const f = document.createElement('div');
-  f.className = 'field col';
-  const l = document.createElement('label');
-  l.textContent = label;
-  const ta = document.createElement('textarea');
-  ta.value = value;
-  ta.rows = 3;
-  ta.autocomplete = 'off';
-  ta.setAttribute('autocapitalize', 'off');
-  ta.setAttribute('autocorrect', 'off');
-  ta.spellcheck = false;
-  ta.addEventListener('change', () => onChange(ta.value));
-  f.append(l, ta);
-  return f;
-}
-
 function afterChange() {
   recomputeCollisions();
   render();
   renderInspector();
 }
+
+// ---------- Label / Description modal ----------
+const labelModal = {
+  root:   document.getElementById('label-modal'),
+  title:  document.getElementById('label-modal-title'),
+  name:   document.getElementById('label-modal-name'),
+  desc:   document.getElementById('label-modal-desc'),
+  save:   document.getElementById('label-modal-save'),
+  cancel: document.getElementById('label-modal-cancel'),
+  target: null,
+};
+
+function openLabelModal(inst) {
+  const lib = findLibElement(inst.libraryId);
+  labelModal.target = inst;
+  labelModal.title.textContent = `Edit — ${lib ? lib.name : inst.libraryId}`;
+  labelModal.name.value = inst.name || '';
+  labelModal.desc.value = inst.desc || '';
+  labelModal.root.classList.remove('hidden');
+  labelModal.name.focus();
+  labelModal.name.select();
+}
+
+function closeLabelModal() {
+  labelModal.root.classList.add('hidden');
+  labelModal.target = null;
+}
+
+function commitLabelModal() {
+  const inst = labelModal.target;
+  if (inst) {
+    inst.name = labelModal.name.value.trim();
+    inst.desc = labelModal.desc.value;
+  }
+  closeLabelModal();
+  afterChange();
+}
+
+labelModal.save.addEventListener('click', commitLabelModal);
+labelModal.cancel.addEventListener('click', closeLabelModal);
+labelModal.root.querySelector('.modal-backdrop').addEventListener('click', closeLabelModal);
+labelModal.root.addEventListener('keydown', evt => {
+  if (evt.key === 'Escape') { evt.preventDefault(); closeLabelModal(); }
+  // Enter saves from the label input; in the textarea, let it insert a newline.
+  else if (evt.key === 'Enter' && evt.target === labelModal.name) { evt.preventDefault(); commitLabelModal(); }
+});
 
 // ---------- Selection / deletion / nudging ----------
 function selectInstance(id) {
@@ -487,6 +542,16 @@ function onInstancePointerDown(evt) {
   const inst = state.instances.find(i => i.id === id);
   if (!inst) return;
 
+  // Manual double-click detection: the re-render in this handler swaps out the
+  // group DOM node, which breaks the browser's same-target requirement for dblclick.
+  const now = performance.now();
+  if (lastClick.id === id && now - lastClick.t < 350) {
+    lastClick = { id: null, t: 0 };
+    openLabelModal(inst);
+    return;
+  }
+  lastClick = { id, t: now };
+
   if (evt.shiftKey) {
     // Toggle membership; no drag
     if (state.selectedIds.has(id)) state.selectedIds.delete(id);
@@ -522,13 +587,15 @@ function onWindowPointerMove(evt) {
     const gx = maybeSnap(m.x), gy = maybeSnap(m.y);
     state.drag.ghost.setAttribute('transform', `translate(${gx.toFixed(3)} ${gy.toFixed(3)})`);
   } else if (state.drag.kind === 'instance') {
-    const dx = m.x - state.drag.start.x;
-    const dy = m.y - state.drag.start.y;
+    // Snap the delta, not each destination — preserves relative spacing
+    // when the originals aren't on the snap grid.
+    const dx = maybeSnap(m.x - state.drag.start.x);
+    const dy = maybeSnap(m.y - state.drag.start.y);
     for (const o of state.drag.origs) {
       const inst = state.instances.find(i => i.id === o.id);
       if (!inst) continue;
-      inst.x = maybeSnap(o.ox + dx);
-      inst.y = maybeSnap(o.oy + dy);
+      inst.x = o.ox + dx;
+      inst.y = o.oy + dy;
     }
     recomputeCollisions();
     render();
@@ -770,7 +837,31 @@ function saveLayout() {
       return o;
     })
   };
-  downloadJSON(data, 'layout.json');
+  saveJSON(data, 'layout.json');
+}
+
+async function saveJSON(data, filename) {
+  const text = JSON.stringify(data, null, 2);
+  if (window.showSaveFilePicker) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: filename,
+        types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(text);
+      await writable.close();
+      return;
+    } catch (e) {
+      if (e.name === 'AbortError') return;       // user cancelled
+      // Fall through to download fallback on other errors.
+    }
+  }
+  const blob = new Blob([text], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
 }
 function loadLayoutData(data) {
   if (!data || !Array.isArray(data.instances)) throw new Error('Bad layout file');
@@ -955,10 +1046,12 @@ function onKey(evt) {
     }
     case 'r': if (single) { single.rot = (single.rot + 90) % 360; afterChange(); } break;
     case 'R': if (single) { single.rot = (single.rot + 270) % 360; afterChange(); } break;
-    case 'ArrowLeft':  for (const i of selected) i.x = maybeSnap(i.x - nudge); afterChange(); break;
-    case 'ArrowRight': for (const i of selected) i.x = maybeSnap(i.x + nudge); afterChange(); break;
-    case 'ArrowUp':    for (const i of selected) i.y = maybeSnap(i.y - nudge); afterChange(); break;
-    case 'ArrowDown':  for (const i of selected) i.y = maybeSnap(i.y + nudge); afterChange(); break;
+    // Nudge by a fixed grid-step delta; don't snap each destination, or
+    // off-grid selections would collapse together and lose relative spacing.
+    case 'ArrowLeft':  for (const i of selected) i.x -= nudge; afterChange(); break;
+    case 'ArrowRight': for (const i of selected) i.x += nudge; afterChange(); break;
+    case 'ArrowUp':    for (const i of selected) i.y -= nudge; afterChange(); break;
+    case 'ArrowDown':  for (const i of selected) i.y += nudge; afterChange(); break;
     default: handled = false;
   }
   if (handled) evt.preventDefault();
@@ -988,6 +1081,12 @@ function init() {
   document.getElementById('btn-export').onclick = exportSVG;
   document.getElementById('btn-export-dxf').onclick = exportDXF;
 
+  // Clicking the canvas should take focus away from toolbar/inspector inputs,
+  // otherwise keyboard shortcuts (R, arrows, Del) get typed into the input.
+  svg.addEventListener('pointerdown', () => {
+    const a = document.activeElement;
+    if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) a.blur();
+  }, true);
   svg.addEventListener('pointerdown', onCanvasPointerDown);
   svg.addEventListener('pointermove', (e) => updateMouseStatus(mouseToSvg(e)));
   window.addEventListener('keydown', onKey);
