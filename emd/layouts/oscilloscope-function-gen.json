@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "panel": {
+    "hp": 8
+  },
+  "instances": [
+    {
+      "libraryId": "oled-1p3",
+      "x": 20.32,
+      "y": 38.1,
+      "rot": 0
+    },
+    {
+      "libraryId": "jack-thonkiconn",
+      "x": 7.62,
+      "y": 16.51,
+      "rot": 0,
+      "name": "V IN 1"
+    },
+    {
+      "libraryId": "jack-thonkiconn",
+      "x": 33.02,
+      "y": 16.51,
+      "rot": 0,
+      "name": "MIDI IN"
+    },
+    {
+      "libraryId": "pot-cg-selco",
+      "x": 8.89,
+      "y": 62.23,
+      "rot": 0,
+      "name": "V SCALE"
+    },
+    {
+      "libraryId": "pot-cg-selco",
+      "x": 31.75,
+      "y": 62.23,
+      "rot": 0,
+      "name": "SWEEP"
+    },
+    {
+      "libraryId": "button-small",
+      "x": 8.89,
+      "y": 77.47,
+      "rot": 0
+    },
+    {
+      "libraryId": "button-small",
+      "x": 31.75,
+      "y": 77.47,
+      "rot": 0
+    },
+    {
+      "libraryId": "jack-thonkiconn",
+      "x": 7.62,
+      "y": 109.22,
+      "rot": 0,
+      "name": "V OUT 1"
+    },
+    {
+      "libraryId": "jack-thonkiconn",
+      "x": 20.32,
+      "y": 109.22,
+      "rot": 0,
+      "name": "V OUT 2"
+    },
+    {
+      "libraryId": "jack-thonkiconn",
+      "x": 20.32,
+      "y": 16.51,
+      "rot": 0,
+      "name": "V IN 2"
+    },
+    {
+      "libraryId": "pot-cg-selco",
+      "x": 8.89,
+      "y": 90.17,
+      "rot": 0,
+      "name": "FREQ"
+    },
+    {
+      "libraryId": "pot-cg-selco",
+      "x": 31.75,
+      "y": 90.17,
+      "rot": 0,
+      "name": "AMP"
+    },
+    {
+      "libraryId": "jack-thonkiconn",
+      "x": 33.02,
+      "y": 109.22,
+      "rot": 0,
+      "name": "MIDI OUT"
+    }
+  ]
+}

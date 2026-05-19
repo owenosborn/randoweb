@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "panel": {
+    "hp": 4
+  },
+  "instances": [
+    {
+      "libraryId": "pot-cg-selco",
+      "x": 10.16,
+      "y": 35.56,
+      "rot": 0,
+      "name": "A"
+    },
+    {
+      "libraryId": "jack-thonkiconn",
+      "x": 5.08,
+      "y": 16.51,
+      "rot": 0,
+      "name": "In"
+    },
+    {
+      "libraryId": "jack-thonkiconn",
+      "x": 15.24,
+      "y": 16.51,
+      "rot": 0,
+      "name": "Out"
+    },
+    {
+      "libraryId": "pot-cg-selco",
+      "x": 10.16,
+      "y": 59.69,
+      "rot": 0,
+      "name": "B"
+    },
+    {
+      "libraryId": "pot-cg-selco",
+      "x": 10.16,
+      "y": 82.55,
+      "rot": 0,
+      "name": "C"
+    },
+    {
+      "libraryId": "button-cg-wood",
+      "x": 10.16,
+      "y": 110.49,
+      "rot": 0,
+      "name": "Select"
+    },
+    {
+      "libraryId": "led-rgb-4mm",
+      "x": 10.16,
+      "y": 99.06,
+      "rot": 0
+    }
+  ]
+}

@@ -47,6 +47,21 @@
 
   <input type="file" id="file-input" accept=".json" hidden>
 
+  <div id="layout-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="layout-modal-title">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <h3 id="layout-modal-title">Layout Description</h3>
+      <div class="field col">
+        <label for="layout-modal-desc">Description</label>
+        <textarea id="layout-modal-desc" rows="6" spellcheck="false"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button id="layout-modal-cancel">Cancel</button>
+        <button id="layout-modal-save" class="primary">Save</button>
+      </div>
+    </div>
+  </div>
+
   <div id="label-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="label-modal-title">
     <div class="modal-backdrop"></div>
     <div class="modal-card">

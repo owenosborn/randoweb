@@ -44,7 +44,7 @@ const DEFAULT_LIBRARY = {
     { id: "led-rgb-4mm", name: "RGB LED (4mm)", category: "LEDs",
       panel:       [{ type: "circle", cx: 0, cy: 0, r: 2.0 }],
       decorations: [{ type: "circle", cx: 0, cy: 0, r: 1.3, fill: "url(#led-rgb)" }],
-      keepout:     [{ type: "rect", x: -3.4, y: -2.45, w: 6.8, h: 4.9 }] },
+      keepout:     [{ type: "rect", x: -3.6, y: -2.5, w: 7.2, h: 5 }] },
     { id: "jack-thonkiconn", name: "Thonkiconn 3.5mm Jack", category: "Jacks",
       panel:       [{ type: "circle", cx: 0, cy: 0, r: 2.5 }],
       decorations: [
@@ -61,7 +61,7 @@ const DEFAULT_LIBRARY = {
 // ---------- State ----------
 const state = {
   library: DEFAULT_LIBRARY,
-  panel: { hp: 12 },
+  panel: { hp: 12, desc: '' },
   instances: [],                // { id, libraryId, x, y, rot }
   selectedIds: new Set(),
   nextId: 1,
@@ -320,10 +320,36 @@ function libBBox(lib) {
 
 function renderInspector() {
   if (state.selectedIds.size === 0) {
-    inspectorContent.innerHTML = `
-      <p class="muted">No element selected.</p>
-      <p class="muted small">Click an element to edit. Drag in empty space to box-select.<br>R to rotate · Del to remove · Arrows to nudge.</p>
-    `;
+    inspectorContent.innerHTML = '';
+
+    const layoutSection = document.createElement('div');
+    layoutSection.className = 'inspector-layout';
+    const title = document.createElement('div');
+    title.className = 'inspector-name';
+    title.textContent = 'Layout';
+    layoutSection.appendChild(title);
+
+    if (state.panel.desc) {
+      const meta = document.createElement('div');
+      meta.className = 'inspector-meta';
+      const d = document.createElement('div');
+      d.className = 'inspector-meta-desc';
+      d.textContent = state.panel.desc;
+      meta.appendChild(d);
+      layoutSection.appendChild(meta);
+    }
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'inspector-edit-btn';
+    editBtn.textContent = state.panel.desc ? 'Edit Description' : 'Add Description';
+    editBtn.onclick = openLayoutModal;
+    layoutSection.appendChild(editBtn);
+    inspectorContent.appendChild(layoutSection);
+
+    const hint = document.createElement('p');
+    hint.className = 'muted small';
+    hint.innerHTML = 'Click an element to edit. Drag in empty space to box-select.<br>R to rotate · Del to remove · Arrows to nudge.';
+    inspectorContent.appendChild(hint);
     return;
   }
   if (state.selectedIds.size > 1) {
@@ -453,6 +479,33 @@ labelModal.root.addEventListener('keydown', evt => {
   if (evt.key === 'Escape') { evt.preventDefault(); closeLabelModal(); }
   // Enter saves from the label input; in the textarea, let it insert a newline.
   else if (evt.key === 'Enter' && evt.target === labelModal.name) { evt.preventDefault(); commitLabelModal(); }
+});
+
+// ---------- Layout description modal ----------
+const layoutModal = {
+  root:   document.getElementById('layout-modal'),
+  desc:   document.getElementById('layout-modal-desc'),
+  save:   document.getElementById('layout-modal-save'),
+  cancel: document.getElementById('layout-modal-cancel'),
+};
+
+function openLayoutModal() {
+  layoutModal.desc.value = state.panel.desc || '';
+  layoutModal.root.classList.remove('hidden');
+  layoutModal.desc.focus();
+}
+function closeLayoutModal() { layoutModal.root.classList.add('hidden'); }
+function commitLayoutModal() {
+  state.panel.desc = layoutModal.desc.value;
+  closeLayoutModal();
+  renderInspector();
+}
+
+layoutModal.save.addEventListener('click', commitLayoutModal);
+layoutModal.cancel.addEventListener('click', closeLayoutModal);
+layoutModal.root.querySelector('.modal-backdrop').addEventListener('click', closeLayoutModal);
+layoutModal.root.addEventListener('keydown', evt => {
+  if (evt.key === 'Escape') { evt.preventDefault(); closeLayoutModal(); }
 });
 
 // ---------- Selection / deletion / nudging ----------
@@ -827,9 +880,11 @@ function recomputeCollisions() {
 
 // ---------- Save / Load ----------
 function saveLayout() {
+  const panelOut = { hp: state.panel.hp };
+  if (state.panel.desc) panelOut.desc = state.panel.desc;
   const data = {
     version: 1,
-    panel: { hp: state.panel.hp },
+    panel: panelOut,
     instances: state.instances.map(i => {
       const o = { libraryId: i.libraryId, x: +i.x.toFixed(4), y: +i.y.toFixed(4), rot: i.rot };
       if (i.name) o.name = i.name;
@@ -866,6 +921,7 @@ async function saveJSON(data, filename) {
 function loadLayoutData(data) {
   if (!data || !Array.isArray(data.instances)) throw new Error('Bad layout file');
   state.panel.hp = data.panel?.hp ?? state.panel.hp;
+  state.panel.desc = data.panel?.desc || '';
   hpInput.value = state.panel.hp;
   state.instances = data.instances.map(d => ({
     id: state.nextId++,
