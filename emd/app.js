@@ -52,6 +52,9 @@ const DEFAULT_LIBRARY = {
         { type: "circle", cx: 0, cy: 0, r: 0.75, fill: "#000" }
       ],
       keepout:     [{ type: "rect", x: -4.6, y: -6, w: 9.2, h: 12.7 }] },
+    { id: "jack-hdmi", name: "HDMI Jack", category: "Jacks",
+      panel:       [{ type: "rect", x: -7.239, y: -4.445, w: 14.478, h: 8.89 }],
+      keepout:     [{ type: "rect", x: -14.605, y: -4.445, w: 29.21, h: 8.89 }] },
     { id: "oled-1p3", name: "OLED 1.3\"", category: "Displays",
       panel:       [{ type: "rect", x: -15.875, y: -8.128, w: 31.75, h: 16.256 }],
       keepout:     [{ type: "rect", x: -18.542, y: -11.303, w: 37.084, h: 26.162 }] }
